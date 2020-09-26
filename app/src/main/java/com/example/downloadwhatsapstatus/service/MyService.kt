@@ -111,42 +111,8 @@ class MyService() : Service() {
         notiRemoteViews =
             RemoteViews(this.applicationContext.packageName, R.layout.custom_noti_view)
 
-        //observe Status Folder
-        val list: ArrayList<String> = ArrayList()
-
-        val fileToStatus =
-            File(Environment.getExternalStorageDirectory().toString() + WHATSAPP_STATUS_FOLDER_PATH)
-        // fetching file path from storage
-        observer = object : FileObserver(fileToStatus.absolutePath) {
-            override fun onEvent(event: Int, file: String?) {
-
-                Log.e("OnEvent>>", "${event==FileObserver.CREATE} <<")
-
-                val listFile = fileToStatus.listFiles()
-                Log.e("FilesInFolder>>", "${listFile} <<<SizE<<<")
-
-                if (listFile != null && listFile.isNullOrEmpty()) {
-                    Arrays.sort(listFile)
-                }
-                if (listFile != null) {
-                    for (imgFile in listFile) {
-                        val model = imgFile.absolutePath
-                        list.add(model)
-
-                    }
-
-                    listener!!.getListOfPaths(list)
-                    updateNotification(builder, list.last())
-
-                }
 
 
-            }
-        }
-
-        observer!!.startWatching()
-
-        Log.e("SizeOfStatus>> ", "${list.size} <<<")
 
 
         Log.e(TAG_FOREGROUND_SERVICE, "Start foreground service.")
@@ -159,7 +125,7 @@ class MyService() : Service() {
             val pendingIntent = PendingIntent.getActivity(this, 0, intent, 0)
 
             //update noti image
-                updateNotification(builder, list.last())
+            //updateNotification(builder, list.last())
 
             // Make notification show big text.
             val bigTextStyle = NotificationCompat.BigTextStyle()
@@ -209,6 +175,55 @@ class MyService() : Service() {
             // Start foreground service.
             startForeground(1, notification)
         }
+
+        //List Files
+        val list: ArrayList<String> = ArrayList()
+
+        val fileToStatus =
+            File(Environment.getExternalStorageDirectory().toString() + WHATSAPP_STATUS_FOLDER_PATH)
+
+        val listFile = fileToStatus.listFiles()
+        Log.e("FilesInFolder>>", "${listFile} <<<SizE<<<")
+
+        if (listFile != null && listFile.isNullOrEmpty()) {
+            Arrays.sort(listFile, kotlin.Comparator { firstFile: File, secondFile: File ->
+                firstFile.lastModified().compareTo(secondFile.lastModified())
+            })
+        }
+        if (listFile != null) {
+            for (imgFile in listFile) {
+                val model = imgFile.absolutePath
+                list.add(model)
+
+            }
+
+//            listener!!.getListOfPaths(list)
+            updateNotification(builder, list.last())
+
+        }
+
+
+        // fetching file path from storage
+        observer = object : FileObserver(fileToStatus.absolutePath) {
+            override fun onEvent(event: Int, file: String?) {
+
+                Log.e("OnEvent>>", "${event == FileObserver.MOVED_TO} <<")
+
+                if (file != null){
+
+                    list.add(file)
+                    updateNotification(builder, File("$fileToStatus${File.separator}$file").absolutePath)
+                }
+
+
+            }
+        }
+
+        observer!!.startWatching()
+
+        Log.e("SizeOfStatus>> ", "${list.size} <<<")
+
+
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -225,8 +240,8 @@ class MyService() : Service() {
         chan.lockscreenVisibility = Notification.VISIBILITY_PRIVATE
         val manager = (getSystemService(NOTIFICATION_SERVICE) as NotificationManager)
         manager.createNotificationChannel(chan)
-        val notificationBuilder = NotificationCompat.Builder(this, channelId)
-        val notification = notificationBuilder.setOngoing(true)
+        builder = NotificationCompat.Builder(this, channelId)
+        val notification = builder.setOngoing(true)
             .setSmallIcon(R.drawable.ic_launcher_background)
             .setContentTitle("App is running in background")
             .setPriority(NotificationManager.IMPORTANCE_MIN)
@@ -235,7 +250,7 @@ class MyService() : Service() {
             .setContentIntent(resultPendingIntent) //intent
             .build()
         notificationManager = NotificationManagerCompat.from(this)
-        notificationManager.notify(1, notificationBuilder.build())
+        notificationManager.notify(1, notification)
         startForeground(1, notification)
     }
 
@@ -256,8 +271,9 @@ class MyService() : Service() {
         const val ACTION_PAUSE = "ACTION_PAUSE"
         const val ACTION_PLAY = "ACTION_PLAY"
         const val WHATSAPP_STATUS_FOLDER_PATH = "/WhatsApp/Media/.Statuses/"
+
         //listener
-        var listener: OnStatusFoundListener?=null
+        var listener: OnStatusFoundListener? = null
 
 
     }
@@ -269,6 +285,7 @@ class MyService() : Service() {
     ) {
 
         Log.e("NotiUri>>", "$imageUri <<<")
+        notiRemoteViews.setImageViewUri(R.id.remote_iv_main, Uri.parse(imageUri))
 
         notificationBuilder.setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setContentTitle("WhatsApp Status")
@@ -282,7 +299,6 @@ class MyService() : Service() {
             .setCustomContentView(notiRemoteViews)
 
         //notificationBuilder.setProgress(0, 0, false)
-        notiRemoteViews.setImageViewUri(R.id.remote_iv_main, Uri.parse(imageUri))
 
         notificationManager.notify(1, notificationBuilder.build())
     }

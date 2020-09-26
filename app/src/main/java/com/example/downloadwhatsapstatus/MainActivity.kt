@@ -14,6 +14,9 @@ import com.example.downloadwhatsapstatus.adapter.StatusAdapter
 import com.example.downloadwhatsapstatus.service.MyService
 import com.example.downloadwhatsapstatus.service.OnStatusFoundListener
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.io.File
 import java.util.*
 import kotlin.collections.ArrayList
@@ -53,6 +56,11 @@ class MainActivity : AppCompatActivity(), OnStatusFoundListener {
 
     }
 
+    override fun onResume() {
+        super.onResume()
+        getListOfPathsAct()
+    }
+
     fun getListOfPathsAct() {
         val list: ArrayList<String> = ArrayList()
 
@@ -62,7 +70,9 @@ class MainActivity : AppCompatActivity(), OnStatusFoundListener {
         Log.e("FilesInFolder>>", "${listFile} <<<SizE<<<")
 
         if (listFile != null && listFile.isNullOrEmpty()) {
-            Arrays.sort(listFile)
+            Arrays.sort(listFile, kotlin.Comparator { firstFile:File, secondFile:File ->
+                firstFile.lastModified().compareTo(secondFile.lastModified())
+            })
         }
 
         if (listFile != null) {
@@ -99,11 +109,11 @@ class MainActivity : AppCompatActivity(), OnStatusFoundListener {
 
     override fun getListOfPaths(listOfPaths: ArrayList<String>) {
 
-        adapter = StatusAdapter()
-        adapter.setList(listOfPaths)
-        rvWhatsAppStatus.layoutManager = GridLayoutManager(this, 3)
-        rvWhatsAppStatus.adapter = adapter
-
+        /*CoroutineScope(Dispatchers.Main).launch {
+            adapter.setList(listOfPaths)
+            adapter.notifyDataSetChanged()
+        }
+        *///adapter = StatusAdapter()
 
     }
 }
