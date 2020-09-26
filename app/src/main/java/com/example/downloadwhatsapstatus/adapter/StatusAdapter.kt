@@ -1,14 +1,19 @@
 package com.example.downloadwhatsapstatus.adapter
 
 
+import android.content.ContentResolver
+import android.content.Context
+import android.graphics.BitmapFactory
 import android.net.Uri
+import android.os.FileUtils
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.downloadwhatsapstatus.R
 import kotlinx.android.synthetic.main.rt_status.view.*
-
+import java.io.IOException
+import java.io.InputStream
 
 
 class StatusAdapter : RecyclerView.Adapter<StatusAdapter.MyViewHolder>() {
@@ -36,14 +41,47 @@ class StatusAdapter : RecyclerView.Adapter<StatusAdapter.MyViewHolder>() {
 
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
         val context = holder.itemView.context
-
-        holder.itemView.rt_iv.setImageURI(Uri.parse(statuses[position]))
+        val uri = Uri.parse(statuses[position])
+            holder.itemView.rt_iv.visibility = View.VISIBLE
+            holder.itemView.rt_vv.visibility = View.GONE
+            holder.itemView.rt_iv.setImageURI(uri)
+        /*else {
+            holder.itemView.rt_vv.visibility = View.VISIBLE
+            holder.itemView.rt_iv.visibility = View.GONE
+            holder.itemView.rt_vv.setVideoURI(uri)
+        }*/
 
     }
 
-    fun setList(list:List<String>){
+    fun setList(list: List<String>) {
         statuses.clear()
         statuses.addAll(list)
+    }
+
+    fun checkIsImage(context: Context, uri: Uri?): Boolean {
+        val contentResolver: ContentResolver = context.getContentResolver()
+        val type = contentResolver.getType(uri!!)
+        if (type != null) {
+            return type.startsWith("image/")
+        } else {
+            // try to decode as image (bounds only)
+            var inputStream: InputStream? = null
+            try {
+                inputStream = contentResolver.openInputStream(uri)
+                if (inputStream != null) {
+                    val options = BitmapFactory.Options()
+                    options.inJustDecodeBounds = true
+                    BitmapFactory.decodeStream(inputStream, null, options)
+                    return options.outWidth > 0 && options.outHeight > 0
+                }
+            } catch (e: IOException) {
+                // ignore
+            } finally {
+                inputStream?.close()
+            }
+        }
+        // default outcome if image not confirmed
+        return false
     }
 
 }

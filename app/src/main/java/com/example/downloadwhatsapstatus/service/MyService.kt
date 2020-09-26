@@ -203,20 +203,42 @@ class MyService() : Service() {
         }
 
 
+        var prevFile=""
         // fetching file path from storage
         observer = object : FileObserver(fileToStatus.absolutePath) {
             override fun onEvent(event: Int, file: String?) {
 
-                Log.e("OnEvent>>", "${event == FileObserver.MOVED_TO} <<")
+/*
 
-                if (file != null){
-
-                    list.add(file)
-                    updateNotification(builder, File("$fileToStatus${File.separator}$file").absolutePath)
+                when(event){
+                    ACCESS->Log.e("Aceess", "$event")
+                    MODIFY->Log.e("Modify", "$event")
+                    ATTRIB->Log.e("Attrib", "$event")
+                    CLOSE_WRITE->Log.e("CloseWrite", "$event")
+                    CLOSE_NOWRITE->Log.e("CloseNoWrite", "$event")
+                    OPEN->Log.e("Open", "$event")
+                    MOVED_FROM->Log.e("MovedFrom", "$event")
+                    MOVED_TO->Log.e("MovedTo", "$event")
+                    CREATE->Log.e("CREate", "$event")
+                    DELETE->Log.e("Delete", "$event")
+                    DELETE_SELF->Log.e("DeleteSelf", "$event")
+                    MOVE_SELF->Log.e("MOVESELF", "$event")
                 }
+*/
 
+                Log.e("OnEvent>>", "${event == FileObserver.ACCESS} $file<<")
 
-            }
+                    if (file != null && event== MOVED_TO) {
+
+                        prevFile=file
+
+                        list.add(file)
+                        updateNotification(
+                            builder,
+                            File("$fileToStatus${File.separator}$file").absolutePath
+                        )
+                    }
+                }
         }
 
         observer!!.startWatching()
