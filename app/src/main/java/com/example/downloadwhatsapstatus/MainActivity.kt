@@ -9,34 +9,43 @@ import android.os.Environment
 import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.GridLayoutManager
-import com.example.downloadwhatsapstatus.adapter.StatusAdapter
+import com.example.downloadwhatsapstatus.adapter.MainPagerAdapter
 import com.example.downloadwhatsapstatus.service.MyService
 import com.example.downloadwhatsapstatus.service.OnStatusFoundListener
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import java.io.File
 import java.util.*
 import kotlin.collections.ArrayList
 
 class MainActivity : AppCompatActivity(), OnStatusFoundListener {
 
-    private lateinit var adapter: StatusAdapter
+    companion object {
+        val listImages: ArrayList<String> = ArrayList()
+        val listVideos: ArrayList<String> = ArrayList()
+
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-            checkPermissions()
+        checkPermissions()
+        setUpViews()
+    }
+
+    private fun setUpViews() {
+
+        val pagerAdapter = MainPagerAdapter(this, supportFragmentManager)
+        vp_main.adapter = pagerAdapter
+        tab_main.setupWithViewPager(vp_main)
+
     }
 
     private fun startServiceAct() {
 
 
         val intent = Intent(this, MyService::class.java)
-        MyService.listener=this
+        MyService.listener = this
         intent.action = MyService.ACTION_START_FOREGROUND_SERVICE
         startService(intent)
 
@@ -62,32 +71,42 @@ class MainActivity : AppCompatActivity(), OnStatusFoundListener {
     }
 
     fun getListOfPathsAct() {
-        val list: ArrayList<String> = ArrayList()
+
+        listImages.clear()
+        listVideos.clear()
 
         val fileToStatus =
-            File(Environment.getExternalStorageDirectory().toString() + MyService.WHATSAPP_STATUS_FOLDER_PATH)
+            File(
+                Environment.getExternalStorageDirectory()
+                    .toString() + MyService.WHATSAPP_STATUS_FOLDER_PATH
+            )
         val listFile = fileToStatus.listFiles()
         Log.e("FilesInFolder>>", "${listFile} <<<SizE<<<")
 
         if (listFile != null && listFile.isNullOrEmpty()) {
-            Arrays.sort(listFile, kotlin.Comparator { firstFile:File, secondFile:File ->
+            Arrays.sort(listFile, kotlin.Comparator { firstFile: File, secondFile: File ->
                 firstFile.lastModified().compareTo(secondFile.lastModified())
             })
+            //listFile.reverse()
         }
 
         if (listFile != null) {
             for (imgFile in listFile) {
                 val model = imgFile.absolutePath
-                list.add(model)
+                if (imgFile.name.contains("nomedia")) {
+
+                } else
+                    if (imgFile.name.endsWith(".jpg")
+                        || imgFile.name.endsWith(".jpeg")
+                        || imgFile.name.endsWith(".png")
+                    )
+                        listImages.add(model)
+                    else
+                        listVideos.add(model)
 
             }
         }
 
-
-        adapter = StatusAdapter()
-        adapter.setList(list)
-        rvWhatsAppStatus.layoutManager = GridLayoutManager(this, 3)
-        rvWhatsAppStatus.adapter = adapter
 
     }
 

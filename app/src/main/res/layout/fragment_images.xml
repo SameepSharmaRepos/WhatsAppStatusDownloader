@@ -7,14 +7,9 @@
     android:orientation="vertical"
     tools:context=".MainActivity">
 
-    <com.google.android.material.tabs.TabLayout
-        android:id="@+id/tab_main"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvWhatsAppStatus"
         android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"/>
-
-    <androidx.viewpager.widget.ViewPager
-        android:id="@+id/vp_main"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="wrap_content"/>
 
 </LinearLayout>

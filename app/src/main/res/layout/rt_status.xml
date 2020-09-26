@@ -6,6 +6,7 @@
     <ImageView
         android:id="@+id/rt_iv"
         android:layout_width="120dp"
+        android:scaleType="centerCrop"
         android:layout_height="100dp"/>
 
     <VideoView

@@ -4,19 +4,21 @@ package com.example.downloadwhatsapstatus.adapter
 import android.content.ContentResolver
 import android.content.Context
 import android.graphics.BitmapFactory
+import android.media.ThumbnailUtils
 import android.net.Uri
-import android.os.FileUtils
+import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.downloadwhatsapstatus.R
 import kotlinx.android.synthetic.main.rt_status.view.*
+import java.io.File
 import java.io.IOException
 import java.io.InputStream
 
 
-class StatusAdapter : RecyclerView.Adapter<StatusAdapter.MyViewHolder>() {
+class StatusAdapter(private val isImage:Boolean) : RecyclerView.Adapter<StatusAdapter.MyViewHolder>() {
 
     private val statuses = mutableListOf<String>()
 
@@ -41,10 +43,16 @@ class StatusAdapter : RecyclerView.Adapter<StatusAdapter.MyViewHolder>() {
 
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
         val context = holder.itemView.context
-        val uri = Uri.parse(statuses[position])
+        val path = statuses[position]
+        val uri = Uri.parse(path)
             holder.itemView.rt_iv.visibility = View.VISIBLE
             holder.itemView.rt_vv.visibility = View.GONE
+        if (isImage)
             holder.itemView.rt_iv.setImageURI(uri)
+        else{
+         val thumb = ThumbnailUtils.createVideoThumbnail(path, MediaStore.Video.Thumbnails.MINI_KIND)
+            holder.itemView.rt_iv.setImageBitmap(thumb)
+        }
         /*else {
             holder.itemView.rt_vv.visibility = View.VISIBLE
             holder.itemView.rt_iv.visibility = View.GONE
